@@ -1,8 +1,6 @@
 services:
   accounting:
-    build:
-      context: ./accounting
-      dockerfile: Dockerfile
+    image: zen00326598/accounting:latest
     container_name: accounting-service
     restart: unless-stopped
     expose:
