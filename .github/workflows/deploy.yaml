@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,9 +25,7 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Pull image
-        run: docker pull zen00326598/accounting:latest
-      - name: Stop existing container
-        run: docker rm -f accounting-app
-      - name: Run docker container
-        run: docker run -d -p 80:8081 --name accounting-app --restart unless-stopped zen00326598/accounting:latest
+      - name: Deploy with Docker Compose
+        run: docker-compose up -d
+      - name: Clean up unused images
+        run: docker image prune -f

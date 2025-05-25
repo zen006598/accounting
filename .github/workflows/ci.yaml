@@ -7,16 +7,41 @@ on:
     branches: [ "dev", "main" ]
 
 jobs:
+  
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      accounting: ${{ steps.changes.outputs.accounting }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: changes
+      with:
+        filters: |
+          accounting:
+            - 'accounting/**'
 
   build:
     runs-on: ubuntu-latest
+    needs: changes
+    strategy:
+      matrix:
+        service: 
+          - name: accounting
+            path: ./accounting
+            port: 8081
+      fail-fast: false
+    
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '1.24.1'
 
-    - name: Build
+    - name: Build ${{ matrix.service.name }}
+      if: needs.changes.outputs[matrix.service.name] == 'true' || github.event_name == 'pull_request'
+      working-directory: ${{ matrix.service.path }}
       run: go build -v ./...
