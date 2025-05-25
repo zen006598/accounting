@@ -1,0 +1,33 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build image
+        run: docker build -t zen00326598/accounting:latest .
+      - name: Push image
+        run: docker push zen00326598/accounting:latest
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Pull image
+        run: docker pull zen00326598/accounting:latest
+      - name: Stop existing container
+        run: docker rm -f accounting-app
+      - name: Run docker container
+        run: docker run -d -p 80:8081 --name accounting-app --restart unless-stopped zen00326598/accounting:latest
