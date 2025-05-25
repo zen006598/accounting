@@ -18,7 +18,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build image
-        run: docker build -t zen00326598/accounting:latest .
+        run: docker build -t zen00326598/accounting:latest ./accounting
       - name: Push image
         run: docker push zen00326598/accounting:latest
   deploy:
