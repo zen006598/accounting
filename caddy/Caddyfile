@@ -1,0 +1,53 @@
+woding-5xruby.com {
+    # 壓縮回應
+    encode gzip
+    
+    # health check router
+    handle /ping {
+        reverse_proxy accounting:8081
+        header {
+            X-Service "accounting-health"
+        }
+    }
+    
+    # API router
+    handle /api/* {
+        reverse_proxy accounting:8081 {
+            health_uri /ping
+            health_interval 30s
+            health_timeout 5s
+            fail_duration 30s
+            max_fails 3
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Real-IP {remote_host}
+        }
+    }
+    
+    # 預設路由到會計服務
+    handle /* {
+        reverse_proxy accounting:8081
+    }
+    
+    # 安全標頭 (與 Cloudflare 搭配)
+    header {
+        # 隱藏伺服器資訊
+        -Server
+        # 防止點擊劫持
+        X-Frame-Options SAMEORIGIN
+        # 防止 MIME 類型嗅探
+        X-Content-Type-Options nosniff
+        # 添加自定義標頭
+        X-Powered-By "Caddy-Proxy"
+    }
+    
+    # 詳細日誌
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 100mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+        level INFO
+    }
+}
