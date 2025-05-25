@@ -1,0 +1,43 @@
+services:
+  accounting:
+    build:
+      context: ./accounting
+      dockerfile: Dockerfile
+    container_name: accounting-service
+    restart: unless-stopped
+    expose:
+      - "8081"
+    environment:
+      - PORT=8081
+      - ENV=production
+      - TRUSTED_PROXIES=caddy
+    networks:
+      - accounting-app-network
+
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: caddy-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - accounting-app-network
+    depends_on:
+      - accounting
+    environment:
+      - CADDY_INGRESS_NETWORKS=accounting-app-network
+
+networks:
+  accounting-app-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+    external: false
+  caddy_config:
+    external: false
